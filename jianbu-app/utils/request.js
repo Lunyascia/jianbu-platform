@@ -1,6 +1,6 @@
 // 健步走小程序 - 请求封装
 // 开发期连本地后端；微信开发者工具需勾选"不校验合法域名"
-const BASE_URL = 'http://10.139.37.153:8080/walking'
+const BASE_URL = 'http://localhost:8080/walking'
 
 const TOKEN_KEY = 'jbw_token'
 
