@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>健步走活动报名</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #F5F6F8; color: #333; font-size: 15px;
+    }
+    /* 顶部横幅 */
+    .banner {
+      background: linear-gradient(120deg, #E8392C 0%, #F07830 60%, #F5A623 100%);
+      padding: 36px 20px 28px; color: #fff;
+    }
+    .banner h1 { font-size: 24px; margin-bottom: 6px; }
+    .banner p { font-size: 13px; opacity: .9; }
+    .banner .tag { display: inline-block; margin-top: 12px; padding: 4px 14px; background: rgba(255,255,255,.25); border-radius: 999px; font-size: 12px; }
+
+    /* 卡片 */
+    .card { background: #fff; border-radius: 14px; margin: 14px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+    .card-title { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+    .info-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F5F5F5; }
+    .info-line span:first-child { color: #666; }
+    .info-line span:last-child { color: #333; }
+    .rule { font-size: 14px; color: #666; line-height: 1.8; margin-top: 12px; }
+    .award-row { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; border-bottom: 1px solid #F5F5F5; }
+    .award-row:last-child { border-bottom: none; }
+    .award-row b { font-weight: 600; }
+    .award-row span { color: #E8392C; }
+
+    /* 会员资格提示 */
+    .member-tip { margin: 14px; padding: 14px 16px; border-radius: 14px; background: #FFF6F5; border: 1px solid #F5A623; }
+    .member-tip .t { font-weight: 700; color: #E8392C; font-size: 15px; display: block; margin-bottom: 6px; }
+    .member-tip .d { font-size: 13px; color: #A8645E; line-height: 1.7; }
+
+    /* 表单 */
+    .form-item { display: flex; align-items: center; margin-bottom: 16px; }
+    .form-item label { width: 86px; font-size: 15px; color: #333; flex-shrink: 0; }
+    .form-item select, .form-item input {
+      flex: 1; height: 42px; border: none; background: #F7F8FA; border-radius: 8px; padding: 0 12px; font-size: 15px; outline: none;
+    }
+    .form-item select { appearance: none; color: #333; }
+    .limit-tip { font-size: 12px; color: #999; line-height: 1.8; margin: 4px 0 16px; }
+    .audit-msg { color: #E8392C; font-size: 13px; margin-bottom: 12px; }
+    .draft-ok { color: #3DB87C; font-size: 12px; margin-bottom: 10px; }
+    .submit-btn {
+      width: 100%; height: 48px; border: none; border-radius: 999px; background: #E8392C; color: #fff;
+      font-size: 17px; font-weight: 600; cursor: pointer;
+    }
+    .submit-btn:disabled { opacity: .6; }
+    .footer { text-align: center; color: #999; font-size: 12px; padding: 16px 0 24px; }
+  </style>
+</head>
+<body>
+
+  <div class="banner">
+    <h1 id="activityName">健步走线上活动</h1>
+    <p id="activityDates"></p>
+    <span class="tag">全县工会会员</span>
+  </div>
+
+  <!-- 活动信息 -->
+  <div class="card">
+    <div class="card-title">活动信息</div>
+    <div class="info-line"><span>活动主题</span><span id="aName">—</span></div>
+    <div class="info-line"><span>活动时间</span><span id="aDates">—</span></div>
+    <div class="rule" id="aDesc" style="display:none"></div>
+    <div class="rule" id="aRule" style="display:none"></div>
+  </div>
+
+  <!-- 奖项设置（奖励数据来自后台"奖励管理"，后台修改后此处即时更新） -->
+  <div class="card">
+    <div class="card-title">奖项设置</div>
+    <div id="awardList"></div>
+  </div>
+
+  <!-- 会员资格说明（常驻） -->
+  <div class="member-tip">
+    <span class="t">⚠️ 获奖资格说明</span>
+    <span class="d">仅工会会员具有评奖资格；获奖名单将审核是否为本单位工会会员，非工会会员将取消获奖资格。</span>
+  </div>
+
+  <!-- 报名表单 -->
+  <div class="card">
+    <div class="card-title">报名表单</div>
+    <div class="form-item">
+      <label>主工会 *</label>
+      <select id="mainDept" onchange="onMainChange()"><option value="">请选择主工会</option></select>
+    </div>
+    <div class="form-item" id="subDeptWrap" style="display:none;">
+      <label>子工会</label>
+      <select id="subDept" onchange="onSubChange()"><option value="">请选择子工会（可不选）</option></select>
+    </div>
+    <div class="form-item">
+      <label>姓名 *</label>
+      <input id="realName" type="text" placeholder="请输入姓名" autocomplete="off">
+    </div>
+    <div class="form-item">
+      <label>手机号 *</label>
+      <input id="phone" type="tel" maxlength="11" placeholder="请输入手机号">
+    </div>
+    <div class="limit-tip">
+      · 一个手机号只能报名一次，不可重复提交新报名<br>
+      · 单个微信账号仅可绑定 1 个手机号报名
+    </div>
+    <div class="audit-msg" id="auditMsg"></div>
+    <div class="draft-ok" id="draftOk"></div>
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()">提交报名</button>
+  </div>
+
+  <div class="footer">健步走线上活动 · 报名系统</div>
+
+<script>
+  // ============ 配置 ============
+  // 后端地址：自动取当前页面的 host（手机从哪个 IP 打开的 H5，就请求同一台电脑的 8080），换网络/换 IP 都无需再改
+  const HOST = location.hostname || 'localhost';
+  const API_BASE = 'http://' + HOST + ':8080/walking';
+  const DRAFT_KEY = 'jbw_h5_draft';
+
+  // ============ 状态 ============
+  window.__form = { mainDeptId: '', mainName: '', subDeptId: '', subName: '', deptId: '', deptName: '' };
+  let orgList = [];
+  let mainList = [];
+
+  // ============ 工具 ============
+  async function api(url, options = {}) {
+    const res = await fetch(API_BASE + url, {
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      ...options
+    });
+    return res.json();
+  }
+  function $(id) { return document.getElementById(id); }
+  function toast(msg, ok) {
+    const el = $('auditMsg');
+    el.textContent = msg;
+    el.style.color = ok ? '#3DB87C' : '#E8392C';
+  }
+
+  // ============ 加载活动信息 ============
+  async function loadActivity() {
+    try {
+      const data = await api('/activity/current', { method: 'GET' });
+      if (data && data.code === 200 && data.data) {
+        const a = data.data;
+        $('aName').textContent = a.activityName;
+        $('aDates').textContent = (a.startDate || '') + ' ~ ' + (a.endDate || '');
+        // 活动介绍（后台"活动介绍"字段，有内容才显示）
+        if (a.description) {
+          $('aDesc').textContent = a.description;
+          $('aDesc').style.display = '';
+        }
+        // 活动规则（后台"活动规则"字段，有内容才显示）
+        if (a.ruleContent) {
+          $('aRule').textContent = a.ruleContent;
+          $('aRule').style.display = '';
+        }
+        $('activityName').textContent = a.activityName;
+        $('activityDates').textContent = $('aDates').textContent;
+        // 报名窗口检查：不在 [registerStart, registerEnd] 内则禁用提交按钮并提示
+        const now = Date.now();
+        const toTs = (s) => {
+          const d = s ? new Date(String(s).replace(' ', 'T')) : null;
+          return d && !isNaN(d.getTime()) ? d.getTime() : null;
+        };
+        const rs = toTs(a.registerStart);
+        const re = toTs(a.registerEnd);
+        const inWindow = (!rs || now >= rs) && (!re || now <= re);
+        if (!inWindow) {
+          $('submitBtn').disabled = true;
+          $('submitBtn').textContent = '当前不在报名窗口';
+          $('auditMsg').textContent = '当前不在报名窗口中，无法提交报名';
+          $('auditMsg').style.color = '#E8392C';
+        }
+      }
+    } catch (e) { /* 后端未就绪 */ }
+  }
+
+  // ============ 加载组织机构（主工会 → 子工会两级联动） ============
+  async function loadOrgs() {
+    try {
+      const data = await api('/org/list', { method: 'GET' });
+      if (data && data.code === 200 && Array.isArray(data.data)) {
+        orgList = data.data;
+        // 组层级：父级也在工会列表内 → 作为其子级；否则为顶级（主工会）
+        const map = {};
+        orgList.forEach((o) => { map[o.deptId] = o; o.children = []; });
+        mainList = [];
+        orgList.forEach((o) => {
+          const p = map[o.parentId];
+          if (p) { p.children.push(o); } else { mainList.push(o); }
+        });
+        // 每个主工会的"全部下属工会"展平，作为子工会候选（三级数据也都能选到）
+        mainList.forEach((m) => {
+          const all = [];
+          (function collect(node) {
+            node.children.forEach((c) => { all.push(c); collect(c); });
+          })(m);
+          m.allDesc = all;
+        });
+        const sel = $('mainDept');
+        sel.innerHTML = '<option value="">请选择主工会</option>';
+        mainList.forEach((o) => {
+          const opt = document.createElement('option');
+          opt.value = o.deptId;
+          opt.textContent = o.deptName;
+          sel.appendChild(opt);
+        });
+      }
+    } catch (e) { /* 后端未就绪 */ }
+  }
+
+  // 选主工会 → 填充其下全部子工会下拉（无子工会则隐藏）
+  function onMainChange() {
+    const idx = $('mainDept').selectedIndex - 1;
+    const cur = idx >= 0 ? mainList[idx] : null;
+    window.__form.mainDeptId = cur ? cur.deptId : '';
+    window.__form.mainName = cur ? cur.deptName : '';
+    window.__form.subDeptId = '';
+    window.__form.subName = '';
+    const subSel = $('subDept');
+    subSel.innerHTML = '<option value="">请选择子工会（可不选）</option>';
+    const wrap = $('subDeptWrap');
+    if (cur && cur.allDesc && cur.allDesc.length) {
+      cur.allDesc.forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c.deptId;
+        opt.textContent = c.deptName;
+        subSel.appendChild(opt);
+      });
+      wrap.style.display = '';
+    } else {
+      wrap.style.display = 'none';
+    }
+    syncDept();
+    saveDraft();
+  }
+
+  // 选子工会 → 更新最终单位
+  function onSubChange() {
+    const idx = $('subDept').selectedIndex - 1;
+    const mIdx = $('mainDept').selectedIndex - 1;
+    const subs = (mIdx >= 0 && mainList[mIdx]) ? mainList[mIdx].allDesc : [];
+    const sub = idx >= 0 ? subs[idx] : null;
+    window.__form.subDeptId = sub ? sub.deptId : '';
+    window.__form.subName = sub ? sub.deptName : '';
+    syncDept();
+    saveDraft();
+  }
+
+  // 汇总最终单位：选了子工会拼"主-子"，否则只取主工会
+  function syncDept() {
+    const f = window.__form;
+    f.deptId = f.subDeptId || f.mainDeptId;
+    f.deptName = f.mainName ? (f.subName ? f.mainName + '-' + f.subName : f.mainName) : '';
+  }
+
+  // ============ 草稿自动保存 ============
+  function saveDraft() {
+    const draft = {
+      mainDeptId: window.__form.mainDeptId,
+      subDeptId: window.__form.subDeptId,
+      deptId: window.__form.deptId,
+      deptName: window.__form.deptName,
+      realName: $('realName').value,
+      phone: $('phone').value
+    };
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      $('draftOk').textContent = '草稿已自动保存';
+      setTimeout(() => { $('draftOk').textContent = ''; }, 1500);
+    } catch (e) {}
+  }
+  function restoreDraft() {
+    try {
+      const d = JSON.parse(localStorage.getItem(DRAFT_KEY));
+      if (d) {
+        $('realName').value = d.realName || '';
+        $('phone').value = d.phone || '';
+        // 恢复主工会（联动填充子工会）
+        if (d.mainDeptId) {
+          const m = $('mainDept');
+          for (let i = 1; i < m.options.length; i++) {
+            if (m.options[i].value === String(d.mainDeptId)) { m.selectedIndex = i; break; }
+          }
+          onMainChange();
+          // 恢复子工会
+          if (d.subDeptId) {
+            const s = $('subDept');
+            for (let i = 1; i < s.options.length; i++) {
+              if (s.options[i].value === String(d.subDeptId)) { s.selectedIndex = i; break; }
+            }
+            onSubChange();
+          }
+        } else if (d.deptName) {
+          window.__form.deptId = d.deptId; window.__form.deptName = d.deptName;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 输入自动存草稿（防抖）
+  let saveTimer = null;
+  ['realName', 'phone'].forEach((id) => {
+    $(id).addEventListener('input', () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveDraft, 600);
+    });
+  });
+
+  // ============ 提交报名 ============
+  async function submitForm() {
+    const form = {
+      deptId: window.__form.deptId,
+      deptName: window.__form.deptName,
+      realName: $('realName').value.trim(),
+      phone: $('phone').value.trim()
+    };
+    if (!form.deptName) return toast('请选择所在单位');
+    if (!form.realName) return toast('请输入姓名');
+    if (!/^1\d{10}$/.test(form.phone)) return toast('手机号格式不正确');
+
+    $('submitBtn').disabled = true;
+    $('submitBtn').textContent = '提交中...';
+    $('auditMsg').textContent = '';
+    try {
+      const data = await api('/registration/submit', { method: 'POST', body: JSON.stringify(form) });
+      const d = data && data.data;
+      if (data.code === 200 && d && d.status >= 2) {
+        localStorage.removeItem(DRAFT_KEY);
+        toast('报名成功！', true);
+        $('submitBtn').textContent = '报名成功';
+      } else if (data.code === 200 && d && d.status === 1) {
+        // 已提交待审核：管理员审核通过后才能绑定，无需重填
+        localStorage.removeItem(DRAFT_KEY);
+        toast('报名已提交，等待管理员审核通过后方可绑定', true);
+        $('submitBtn').disabled = true;
+        $('submitBtn').textContent = '已提交待审核';
+      } else {
+        // 未通过（含敏感内容拦截）→ 草稿已自动保存，无需重填
+        toast(data.msg || d && d.auditResult || '报名未通过，请修改后重新提交');
+        saveDraft();
+        $('submitBtn').disabled = false;
+        $('submitBtn').textContent = '提交报名';
+      }
+    } catch (e) {
+      toast('提交失败，请检查网络或后端是否启动');
+      $('submitBtn').disabled = false;
+      $('submitBtn').textContent = '提交报名';
+    }
+  }
+
+  // ============ 奖励设置（后台"奖励管理"配置，动态渲染） ============
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // 名额文本：集体奖单位为"家"，个人奖为"名"；rankEnd 为 0 表示"若干"
+  function quotaText(a) {
+    const unit = a.awardType === 2 ? '家' : '名';
+    if (!a.rankEnd || a.rankEnd === 0) return '若干' + unit;
+    return (a.rankEnd - a.rankStart + 1) + unit;
+  }
+
+  async function loadAwards() {
+    try {
+      const data = await api('/award/list', { method: 'GET' });
+      if (data && data.code === 200 && data.data) {
+        const rows = data.data;
+        const box = $('awardList');
+        if (!rows.length) {
+          box.innerHTML = '<div class="award-row" style="justify-content:center;color:#999;border:none">奖励设置由后台发布</div>';
+          return;
+        }
+        box.innerHTML = rows.map(function (a) {
+          return '<div class="award-row"><b>' + escapeHtml(a.awardName) + '</b><span>' +
+            escapeHtml(quotaText(a)) + ' · ' + escapeHtml(a.prizeContent) + '</span></div>';
+        }).join('');
+      }
+    } catch (e) { /* 后端未就绪 */ }
+  }
+
+  // ============ 初始化 ============
+  loadActivity();
+  loadAwards();
+  loadOrgs().then(restoreDraft);
+</script>
+</body>
+</html>
